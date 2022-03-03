@@ -1,15 +1,22 @@
 require 'nokogiri'
 require 'fileutils'
 require 'date'
+require 'yaml'
 
 class BrikkeTildeling
-  attr_accessor :xml_document, :xml_file, :tag_id
+  attr_accessor :xml_document, :xml_file, :tag_id, :config
 
-  def initialize(filename)
-    @tag_id = 1001
-    File.open(filename) do |f|
-      @xml_file = filename + "#{DateTime.now().strftime("%Y%m%d%H%M%S")}.tags"
-      @xml_document = Nokogiri::XML(f) { |x| x.noblanks }
+  def initialize(config_filename)
+    if config_filename
+      @config = YAML.load_file(config_filename)
+      pp @config
+      @tag_id = @config['series']['start']
+      File.open(@config['filename']) do |f|
+        @xml_file = @config['filename'] + "#{DateTime.now().strftime("%Y%m%d%H%M%S")}.tags"
+        @xml_document = Nokogiri::XML(f) { |x| x.noblanks }
+      end
+    else
+      puts "Please provide the name of a config file in the yaml format (see README for details)."
     end
   end
 
@@ -31,7 +38,7 @@ class BrikkeTildeling
       short_name = klass[0]['shortName']
       teams = entry > 'TeamEntry'
       puts "#{short_name} - #{teams.count} teams"
-      assign_tags(entry) unless ['G 8-10', 'J 8-10'].include?(short_name)
+      assign_tags(entry) unless @config['exceptions'].include?(short_name)
     end
     puts "Next tag id: #{@tag_id}."
     # puts @xml_document.to_xml
@@ -65,7 +72,7 @@ class BrikkeTildeling
   end
 
   def skip_missing_or_defect_tags
-    @tag_id += 1 if [1101, 1102, 1131].include?(@tag_id)
+    @tag_id += 1 if @config['series']['missing'].include?(@tag_id)
   end
 
   def emit_tag(person)
@@ -75,7 +82,7 @@ class BrikkeTildeling
 
   def clear_emit_tag(person)
     emit = emit_tag(person)
-    emit.content = nil if !emit.content.empty? && emit.content.to_i < 1250
+    emit.content = nil if !emit.content.empty? && emit.content.to_i < @config['series']['end']
   end
 
   def chip_tag(person)
@@ -85,7 +92,7 @@ class BrikkeTildeling
 
   def clear_chip_tag(person)
     chip = chip_tag(person)
-    chip.content = nil if !chip.content.empty? && chip.content.to_i < 1250
+    chip.content = nil if !chip.content.empty? && chip.content.to_i < @config['series']['end']
   end
 
   def write_xml
@@ -96,10 +103,3 @@ class BrikkeTildeling
     end
   end
 end
-
-#puts DateTime.now().strftime("%Y%m%d%H%M%S")
-brikke_tildeling = BrikkeTildeling.new './SSF XML_eventid_330476.xml'
-brikke_tildeling.clean_emit_tags
-brikke_tildeling.assign_rental_tags
-brikke_tildeling.total_teams
-brikke_tildeling.write_xml

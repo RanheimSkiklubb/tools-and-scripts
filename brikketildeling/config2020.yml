@@ -1,0 +1,11 @@
+series:
+  start: 1001
+  end: 1250
+  missing:
+    - 1101
+    - 1102
+    - 1131
+filename: ./input2020.xml
+exceptions:
+  - G 8-10
+  - J 8-10
