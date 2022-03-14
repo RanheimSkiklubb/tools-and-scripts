@@ -3,6 +3,14 @@ require 'fileutils'
 require 'date'
 require 'yaml'
 
+class Array
+  def find_duplicates
+    select.with_index do |e, i|
+      i != self.index(e)
+    end
+  end
+end
+
 class BrikkeTildeling
   attr_accessor :xml_document, :xml_file, :tag_id, :config
 
@@ -46,7 +54,10 @@ class BrikkeTildeling
 
   def total_teams
     teams = @xml_document.xpath('//TeamEntry')
-    puts "Total teams: #{teams.count}"
+    competitors = @xml_document.xpath('//TeamEntry//Competitor')
+    competitors = competitors.map {|e| e['competitorId']}
+    puts "Duplicate competitors: #{competitors.find_duplicates}"
+    puts "Total teams: #{teams.count}. Total number of competitors: #{competitors.count}"
   end
 
   def assign_tags(entry)

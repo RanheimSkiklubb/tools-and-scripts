@@ -1,0 +1,12 @@
+series:
+  start: 1001
+  end: 1250
+  missing:
+    - 1008
+    - 1031
+    - 1102
+    - 1213
+filename: ./input2022_2.xml
+exceptions:
+  - G 8-10
+  - J 8-10
