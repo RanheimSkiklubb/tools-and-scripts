@@ -28,6 +28,34 @@ class BrikkeTildeling
     end
   end
 
+  def run
+    assign = should_reassign?
+    if assign
+      puts "Reassigning tags."
+      clean_emit_tags
+      assign_rental_tags
+      write_xml
+      puts "Next tag id: #{@tag_id}."
+    else
+      puts "Keeping exisiting tags."
+    end
+    status
+  end
+
+
+  private
+
+  def should_reassign?
+    valid_answer = false
+    while !valid_answer do
+      puts "Do you want to reassing all tags in the file (yes/no)?"
+      answer = gets.chomp
+      puts answer.downcase
+      valid_answer = ["yes", "y", "no", "n"].include? answer.downcase
+    end
+    answer == "yes" || answer == "y"
+  end
+
   # Will delete all registered emit tags below 1250
   def clean_emit_tags
     people = @xml_document.xpath('//Person')
@@ -37,27 +65,46 @@ class BrikkeTildeling
     end
   end
 
+  def klass_short_name(entry)
+    klass = entry > 'EntryClass'
+    klass[0]['shortName']
+  end
+
   def assign_rental_tags
     entries = @xml_document.xpath('//Entry')
     entries.each do |entry|
       next if entry.content.empty?
-
-      klass = entry > 'EntryClass'
-      short_name = klass[0]['shortName']
-      teams = entry > 'TeamEntry'
-      puts "#{short_name} - #{teams.count} teams"
+      short_name = klass_short_name entry
       assign_tags(entry) unless @config['exceptions'].include?(short_name)
     end
-    puts "Next tag id: #{@tag_id}."
-    # puts @xml_document.to_xml
+  end
+
+  def status
+    duplicates
+    team_status
+    total_teams
+  end
+
+  def duplicates
+    competitors = @xml_document.xpath('//TeamEntry//Competitor')
+    competitors = competitors.map {|e| e['competitorId']}
+    puts "Total number of competitors: #{competitors.count}"
+    puts "Duplicate competitors: #{competitors.find_duplicates}"
+  end
+
+  def team_status
+    entries = @xml_document.xpath('//Entry')
+    entries.each do |entry|
+      next if entry.content.empty?
+      teams = entry > 'TeamEntry'
+      short_name = klass_short_name entry
+      puts "#{short_name} - #{teams.count} teams"
+    end
   end
 
   def total_teams
     teams = @xml_document.xpath('//TeamEntry')
-    competitors = @xml_document.xpath('//TeamEntry//Competitor')
-    competitors = competitors.map {|e| e['competitorId']}
-    puts "Duplicate competitors: #{competitors.find_duplicates}"
-    puts "Total teams: #{teams.count}. Total number of competitors: #{competitors.count}"
+    puts "Total teams: #{teams.count}."
   end
 
   def assign_tags(entry)
