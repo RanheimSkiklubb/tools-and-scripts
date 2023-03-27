@@ -48,7 +48,7 @@ class BrikkeTildeling
   def should_reassign?
     valid_answer = false
     while !valid_answer do
-      puts "Do you want to reassing all tags in the file (yes/no)?"
+      puts "Do you want to reassign all tags in the file (yes/no)?"
       answer = gets.chomp
       puts answer.downcase
       valid_answer = ["yes", "y", "no", "n"].include? answer.downcase
@@ -56,7 +56,8 @@ class BrikkeTildeling
     answer == "yes" || answer == "y"
   end
 
-  # Will delete all registered emit tags below 1250
+  # Will delete all registered emit tags below the configured end of series
+  # Does not consider start of series... This is probably a BUG!
   def clean_emit_tags
     people = @xml_document.xpath('//Person')
     people.each do |person|

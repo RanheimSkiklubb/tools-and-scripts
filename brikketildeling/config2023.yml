@@ -1,0 +1,8 @@
+series:
+  start: 1501
+  end: 1600
+  missing:
+    -
+filename: ./input2023_1.xml
+exceptions:
+  - G/J 8-10
