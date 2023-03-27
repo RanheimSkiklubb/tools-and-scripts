@@ -1,0 +1,9 @@
+series:
+  start: 1501
+  end: 1600
+  missing:
+    - 1568
+filename: ./input2024_2.xml
+exceptions:
+  - G 8-10
+  - J 8-10

@@ -19,10 +19,12 @@ class BrikkeTildeling
       @config = YAML.load_file(config_filename)
       pp @config
       @tag_id = @config['series']['start']
-      File.open(@config['filename']) do |f|
+      File.open(@config['filename'], 'r:ISO-8859-10') do |f|
         @xml_file = @config['filename'] + "#{DateTime.now().strftime("%Y%m%d%H%M%S")}.tags"
-        @xml_document = Nokogiri::XML(f) { |x| x.noblanks }
+        @xml_document = Nokogiri::XML(f, nil, 'ISO-8859-10') { |x| x.noblanks }
       end
+      #puts "Initialized"
+      #puts @xml_document.to_xml
     else
       puts "Please provide the name of a config file in the yaml format (see README for details)."
     end
